@@ -267,16 +267,17 @@ class TeatroControlPanel extends Application {
                 if (!game.user.isGM && !a.isOwner) return false;
                 
                 let src = a.img;
-                // Se Multiversus ativo e tem token válido que não é o mistério padrão
-                if (isMV && a.prototypeToken?.texture?.src && !a.prototypeToken.texture.src.includes("mystery-man")) {
-                    src = a.prototypeToken.texture.src;
+                let halfbody = a.flags?.["multiversus-rpg"]?.halfbody || a.flags?.["multiversus-rpg"]?.halfBody || a.flags?.["multiversus-rpg"]?.Halfbody;
+                if (isMV && halfbody) {
+                    src = halfbody;
                 }
 
                 return typeof src === "string" && (src.endsWith(".webm") || src.endsWith(".mp4") || src.endsWith(".gif") || src.endsWith(".webp") || src.endsWith(".png") || src.endsWith(".jpg") || src.endsWith(".jpeg"));
             }).map(a => {
                 let src = a.img;
-                if (isMV && a.prototypeToken?.texture?.src && !a.prototypeToken.texture.src.includes("mystery-man")) {
-                    src = a.prototypeToken.texture.src;
+                let halfbody = a.flags?.["multiversus-rpg"]?.halfbody || a.flags?.["multiversus-rpg"]?.halfBody || a.flags?.["multiversus-rpg"]?.Halfbody;
+                if (isMV && halfbody) {
+                    src = halfbody;
                 }
                 
                 return {
@@ -422,8 +423,9 @@ class TeatroControlPanel extends Application {
 
                 const isMV = game.modules.get("multiversus-rpg")?.active;
                 let src = actor.img;
-                if (isMV && actor.prototypeToken?.texture?.src && !actor.prototypeToken.texture.src.includes("mystery-man")) {
-                    src = actor.prototypeToken.texture.src;
+                let halfbody = actor.flags?.["multiversus-rpg"]?.halfbody || actor.flags?.["multiversus-rpg"]?.halfBody || actor.flags?.["multiversus-rpg"]?.Halfbody;
+                if (isMV && halfbody) {
+                    src = halfbody;
                 }
                 
                 const isRightSide = count % 2 === 1;
