@@ -267,7 +267,7 @@ class TeatroControlPanel extends Application {
                 if (!game.user.isGM && !a.isOwner) return false;
                 
                 let src = a.img;
-                let halfbody = a.flags?.["multiversus-rpg"]?.halfbody || a.flags?.["multiversus-rpg"]?.halfBody || a.flags?.["multiversus-rpg"]?.Halfbody;
+                let halfbody = a.flags?.["multiversus-rpg"]?.halfBodyImg || a.flags?.["multiversus-rpg"]?.halfbody || a.flags?.["multiversus-rpg"]?.halfBody || a.flags?.["multiversus-rpg"]?.Halfbody;
                 if (isMV && halfbody) {
                     src = halfbody;
                 }
@@ -275,7 +275,7 @@ class TeatroControlPanel extends Application {
                 return typeof src === "string" && (src.endsWith(".webm") || src.endsWith(".mp4") || src.endsWith(".gif") || src.endsWith(".webp") || src.endsWith(".png") || src.endsWith(".jpg") || src.endsWith(".jpeg"));
             }).map(a => {
                 let src = a.img;
-                let halfbody = a.flags?.["multiversus-rpg"]?.halfbody || a.flags?.["multiversus-rpg"]?.halfBody || a.flags?.["multiversus-rpg"]?.Halfbody;
+                let halfbody = a.flags?.["multiversus-rpg"]?.halfBodyImg || a.flags?.["multiversus-rpg"]?.halfbody || a.flags?.["multiversus-rpg"]?.halfBody || a.flags?.["multiversus-rpg"]?.Halfbody;
                 if (isMV && halfbody) {
                     src = halfbody;
                 }
@@ -423,7 +423,7 @@ class TeatroControlPanel extends Application {
 
                 const isMV = game.modules.get("multiversus-rpg")?.active;
                 let src = actor.img;
-                let halfbody = actor.flags?.["multiversus-rpg"]?.halfbody || actor.flags?.["multiversus-rpg"]?.halfBody || actor.flags?.["multiversus-rpg"]?.Halfbody;
+                let halfbody = actor.flags?.["multiversus-rpg"]?.halfBodyImg || actor.flags?.["multiversus-rpg"]?.halfbody || actor.flags?.["multiversus-rpg"]?.halfBody || actor.flags?.["multiversus-rpg"]?.Halfbody;
                 if (isMV && halfbody) {
                     src = halfbody;
                 }
