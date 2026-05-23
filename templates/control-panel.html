@@ -8,6 +8,9 @@
     </div>
     {{/if}}
     <div class="teatro-panel-content">
+        <div class="teatro-search-bar" style="padding: 0 10px 10px 10px; margin-top: 10px;">
+            <input type="text" id="teatro-search-input" placeholder="Pesquisar ator ou pasta..." style="width: 100%; box-sizing: border-box; background: rgba(0, 0, 0, 0.5); color: white; border: 1px solid var(--color-border-dark-2); border-radius: 3px; padding: 5px;">
+        </div>
         {{{folderHTML}}}
 
         {{#if unassigned.length}}

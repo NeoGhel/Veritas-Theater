@@ -132,7 +132,7 @@ function updateVideoDOM() {
     });
 
     if (ui.teatroControlPanel && ui.teatroControlPanel.rendered) {
-        ui.teatroControlPanel.render(true);
+        ui.teatroControlPanel.syncActiveStates();
     }
 }
 
@@ -379,8 +379,55 @@ class TeatroControlPanel extends Application {
         };
     }
 
+    syncActiveStates() {
+        if (!this.rendered) return;
+        this.element.find('.teatro-actor-item').each(function() {
+            const id = $(this).data('actor-id');
+            if (activeVideos[id]) {
+                $(this).addClass('active');
+            } else {
+                $(this).removeClass('active');
+            }
+        });
+    }
+
     activateListeners(html) {
         super.activateListeners(html);
+
+        // Barra de Pesquisa
+        html.find('#teatro-search-input').on('input', e => {
+            const term = e.currentTarget.value.toLowerCase();
+            
+            if (term === "") {
+                html.find('.teatro-actor-item').show();
+                html.find('.teatro-folder').show();
+                return;
+            }
+
+            html.find('.teatro-actor-item').hide();
+            html.find('.teatro-folder').hide();
+
+            html.find('.teatro-folder').each(function() {
+                const folderName = $(this).find('.teatro-folder-header').first().text().toLowerCase();
+                if (folderName.includes(term)) {
+                    $(this).show();
+                    $(this).find('.teatro-actor-item').show();
+                    $(this).parents('.teatro-folder').show();
+                }
+            });
+
+            html.find('.teatro-actor-item').each(function() {
+                const actorName = $(this).find('.teatro-actor-name').text().toLowerCase();
+                if (actorName.includes(term)) {
+                    $(this).show();
+                    $(this).parents('.teatro-folder').show();
+                }
+            });
+
+            html.find('.teatro-folder:visible').each(function() {
+                $(this).children('.teatro-folder-content').show();
+            });
+        });
 
         // Configuração de Escala (apenas GM)
         html.find('#teatro-scale-slider').on('input', e => {
