@@ -231,7 +231,49 @@ Hooks.once('ready', () => {
     
     $('body').append($btn);
     
-    $btn.on('click', () => {
+    let isDraggingBtn = false;
+    let dragStartX, dragStartY, initialLeft, initialTop;
+
+    $btn.on('mousedown', (e) => {
+        if (e.button === 0) {
+            isDraggingBtn = true;
+            dragStartX = e.clientX;
+            dragStartY = e.clientY;
+            const offset = $btn.offset();
+            initialLeft = offset.left;
+            initialTop = offset.top;
+            $btn.css({ transition: 'none', cursor: 'grabbing' });
+            e.preventDefault();
+        }
+    });
+
+    $(window).on('mousemove', (e) => {
+        if (!isDraggingBtn) return;
+        let newLeft = initialLeft + (e.clientX - dragStartX);
+        let newTop = initialTop + (e.clientY - dragStartY);
+
+        const btnWidth = $btn.outerWidth();
+        const btnHeight = $btn.outerHeight();
+        const maxLeft = window.innerWidth - btnWidth;
+        const maxTop = window.innerHeight - btnHeight;
+
+        if (newLeft < 0) newLeft = 0;
+        if (newLeft > maxLeft) newLeft = maxLeft;
+        if (newTop < 0) newTop = 0;
+        if (newTop > maxTop) newTop = maxTop;
+
+        $btn.css({ left: newLeft + 'px', top: newTop + 'px', bottom: 'auto', right: 'auto' });
+    });
+
+    $(window).on('mouseup', (e) => {
+        if (e.button === 0 && isDraggingBtn) {
+            isDraggingBtn = false;
+            $btn.css({ transition: '', cursor: 'pointer' });
+        }
+    });
+    
+    $btn.on('click', (e) => {
+        if (Math.abs(e.clientX - dragStartX) > 3 || Math.abs(e.clientY - dragStartY) > 3) return;
         if (!ui.teatroControlPanel) {
             ui.teatroControlPanel = new TeatroControlPanel();
         }
@@ -267,16 +309,22 @@ class TeatroControlPanel extends Application {
                 if (!game.user.isGM && !a.isOwner) return false;
                 
                 let src = a.img;
+                let customMedia = a.getFlag(MODULE_ID, 'customMedia');
                 let halfbody = a.flags?.["multiversus-rpg"]?.halfBodyImg || a.flags?.["multiversus-rpg"]?.halfbody || a.flags?.["multiversus-rpg"]?.halfBody || a.flags?.["multiversus-rpg"]?.Halfbody;
-                if (isMV && halfbody) {
+                if (customMedia) {
+                    src = customMedia;
+                } else if (isMV && halfbody) {
                     src = halfbody;
                 }
 
                 return typeof src === "string" && (src.endsWith(".webm") || src.endsWith(".mp4") || src.endsWith(".gif") || src.endsWith(".webp") || src.endsWith(".png") || src.endsWith(".jpg") || src.endsWith(".jpeg"));
             }).map(a => {
                 let src = a.img;
+                let customMedia = a.getFlag(MODULE_ID, 'customMedia');
                 let halfbody = a.flags?.["multiversus-rpg"]?.halfBodyImg || a.flags?.["multiversus-rpg"]?.halfbody || a.flags?.["multiversus-rpg"]?.halfBody || a.flags?.["multiversus-rpg"]?.Halfbody;
-                if (isMV && halfbody) {
+                if (customMedia) {
+                    src = customMedia;
+                } else if (isMV && halfbody) {
                     src = halfbody;
                 }
                 
@@ -470,8 +518,11 @@ class TeatroControlPanel extends Application {
 
                 const isMV = game.modules.get("multiversus-rpg")?.active;
                 let src = actor.img;
+                let customMedia = actor.getFlag(MODULE_ID, 'customMedia');
                 let halfbody = actor.flags?.["multiversus-rpg"]?.halfBodyImg || actor.flags?.["multiversus-rpg"]?.halfbody || actor.flags?.["multiversus-rpg"]?.halfBody || actor.flags?.["multiversus-rpg"]?.Halfbody;
-                if (isMV && halfbody) {
+                if (customMedia) {
+                    src = customMedia;
+                } else if (isMV && halfbody) {
                     src = halfbody;
                 }
                 
@@ -492,3 +543,52 @@ class TeatroControlPanel extends Application {
         });
     }
 }
+
+// -------------------------------------------------------------
+// BOTÃO NO CABEÇALHO DA FICHA
+// -------------------------------------------------------------
+Hooks.on('getActorSheetHeaderButtons', (sheet, buttons) => {
+    if (!game.user.isGM && !sheet.actor.isOwner) return;
+
+    buttons.unshift({
+        label: "Teatro",
+        class: "teatro-media-btn",
+        icon: "fas fa-film",
+        onclick: () => {
+            const currentMedia = sheet.actor.getFlag(MODULE_ID, 'customMedia') || "";
+            new Dialog({
+                title: "Configurar Mídia do Teatro",
+                content: `
+                    <div class="form-group">
+                        <label>URL da Mídia (Imagem ou Vídeo):</label>
+                        <input type="text" id="teatro-custom-media-input" value="${currentMedia}" style="width: 100%; box-sizing: border-box; margin-top: 5px; margin-bottom: 10px;" placeholder="Ex: https://exemplo.com/midia.webm">
+                        <p class="notes" style="font-size: 12px; color: var(--color-text-dark-secondary);">Deixe em branco para usar o Halfbody ou Avatar padrão.</p>
+                    </div>
+                `,
+                buttons: {
+                    save: {
+                        icon: '<i class="fas fa-check"></i>',
+                        label: "Salvar",
+                        callback: (html) => {
+                            const val = html.find('#teatro-custom-media-input').val().trim();
+                            if (val) {
+                                sheet.actor.setFlag(MODULE_ID, 'customMedia', val).then(() => {
+                                    ui.notifications.info("Mídia do Teatro atualizada!");
+                                });
+                            } else {
+                                sheet.actor.unsetFlag(MODULE_ID, 'customMedia').then(() => {
+                                    ui.notifications.info("Mídia do Teatro removida (usando padrão)!");
+                                });
+                            }
+                        }
+                    },
+                    cancel: {
+                        icon: '<i class="fas fa-times"></i>',
+                        label: "Cancelar"
+                    }
+                },
+                default: "save"
+            }).render(true);
+        }
+    });
+});
