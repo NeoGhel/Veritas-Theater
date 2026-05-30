@@ -22,7 +22,31 @@ Hooks.once('init', () => {
         default: 48,    // 48vh (20% menor que o antigo 60vh)
         onChange: value => updateGlobalScale(value)
     });
+
+    game.settings.register(MODULE_ID, "maxActors", {
+        name: "Máximo de Personagens na Cena",
+        hint: "Define o limite máximo de personagens que o Mestre pode colocar no Teatro simultaneamente (Recomendado: 5 a 10).",
+        scope: "world",
+        config: true,
+        type: Number,
+        default: 10
+    });
+
+    game.settings.register(MODULE_ID, "activeVideosState", {
+        scope: "world",
+        config: false,
+        type: Object,
+        default: {}
+    });
 });
+
+function saveState() {
+    if (!game.user.isGM) return;
+    if (ui.teatroSaveTimeout) clearTimeout(ui.teatroSaveTimeout);
+    ui.teatroSaveTimeout = setTimeout(() => {
+        game.settings.set(MODULE_ID, "activeVideosState", activeVideos);
+    }, 1000);
+}
 
 function updateGlobalScale(value) {
     document.documentElement.style.setProperty('--teatro-scale', `${value}vh`);
@@ -31,7 +55,8 @@ function updateGlobalScale(value) {
 Hooks.once('ready', () => {
     console.log("Teatro em Vídeo | Inicializando módulo (Multi-Actor)");
 
-    // Aplica a escala inicial
+    // Carrega o estado sincronizado salvo e a escala inicial
+    activeVideos = game.settings.get(MODULE_ID, "activeVideosState") || {};
     updateGlobalScale(game.settings.get(MODULE_ID, "actorScale"));
 
     // Injetar container na tela principal
@@ -40,6 +65,9 @@ Hooks.once('ready', () => {
     `;
     $('body').append(html);
     $container = $('#teatro-video-container');
+
+    // Garante que o painel seja populado ao entrar no jogo
+    updateVideoDOM();
 
     // Escuta dos Sockets
     game.socket.on(SOCKET_NAME, (data) => {
@@ -52,6 +80,7 @@ Hooks.once('ready', () => {
 // -------------------------------------------------------------
 function emitSocketData(data) {
     game.socket.emit(SOCKET_NAME, data);
+    saveState();
 }
 
 function handleSocketAction(data) {
@@ -73,6 +102,7 @@ function handleSocketAction(data) {
             updateVideoTransform(data.id);
         }
     }
+    saveState();
 }
 
 // -------------------------------------------------------------
@@ -223,6 +253,8 @@ function attachVideoListeners($video, id) {
 // Como o seu sistema (Multiversus) está quebrando/escondendo a coluna secundária
 // do Foundry, criamos um botão independente que fica logo abaixo dos controles na esquerda.
 Hooks.once('ready', () => {
+    if (!game.user.isGM) return;
+
     const $btn = $(`
         <div id="teatro-independent-btn" title="Abrir Teatro (Teatro em Vídeo)">
             <i class="fas fa-theater-masks"></i>
@@ -507,8 +539,15 @@ class TeatroControlPanel extends Application {
                 updateVideoDOM();
                 emitSocketData({ action: "remove", id: id });
             } else {
-                // Lógica de auto-justaposição
                 const count = Object.keys(activeVideos).length;
+                const maxAllowed = game.settings.get(MODULE_ID, "maxActors") || 10;
+                
+                if (count >= maxAllowed) {
+                    ui.notifications.warn(`O limite configurado é de ${maxAllowed} personagens simultâneos no Teatro.`);
+                    return;
+                }
+
+                // Lógica de auto-justaposição
                 let newBaseX = 0;
                 if (count > 0) {
                     const step = Math.ceil(count / 2);
