@@ -90,6 +90,12 @@ function handleSocketAction(data) {
     } else if (data.action === "remove") {
         delete activeVideos[data.id];
         updateVideoDOM();
+    } else if (data.action === "removeAll") {
+        activeVideos = {};
+        updateVideoDOM();
+    } else if (data.action === "sync") {
+        activeVideos = data.state || {};
+        updateVideoDOM();
     } else if (data.action === "drag") {
         if (activeVideos[data.id]) {
             activeVideos[data.id].baseX = data.baseX;
@@ -519,6 +525,18 @@ class TeatroControlPanel extends Application {
         html.find('#teatro-scale-slider').on('change', async e => {
             const val = Number(e.currentTarget.value);
             await game.settings.set(MODULE_ID, "actorScale", val); // Salva e sincroniza
+        });
+
+        // Botões GM
+        html.find('#teatro-remove-all-btn').click(e => {
+            activeVideos = {};
+            updateVideoDOM();
+            emitSocketData({ action: "removeAll" });
+        });
+
+        html.find('#teatro-force-sync-btn').click(e => {
+            emitSocketData({ action: "sync", state: activeVideos });
+            ui.notifications.info("Sincronização forçada enviada aos jogadores.");
         });
 
         // Sanfona de Pastas (Agora isolado para subpastas)

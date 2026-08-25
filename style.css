@@ -62,6 +62,14 @@
     display: flex;
     flex-direction: column;
     height: 100%;
+    background: #111111;
+    color: #e0e0e0;
+}
+
+.teatro-app .window-content {
+    background: #111111 !important;
+    padding: 0;
+    color: #e0e0e0;
 }
 
 .teatro-panel-content {
@@ -72,25 +80,27 @@
 
 .teatro-folder {
     margin-bottom: 5px;
-    border: 1px solid var(--color-border-light-2);
+    border: 1px solid #333333;
     border-radius: 4px;
-    background: rgba(0, 0, 0, 0.1);
+    background: #1a1a1a;
 }
 
 .teatro-folder-header {
     margin: 0;
-    padding: 5px;
-    background: rgba(0, 0, 0, 0.2);
+    padding: 6px 10px;
+    background: linear-gradient(to right, #2a2a2a, #1a1a1a);
     cursor: pointer;
     font-size: 14px;
     display: flex;
     align-items: center;
     gap: 5px;
+    color: #d8c381;
+    border-bottom: 1px solid #333333;
 }
 
 .teatro-folder-count {
     font-size: 11px;
-    color: var(--color-text-light-highlight);
+    color: #aaaaaa;
     margin-left: auto;
 }
 
@@ -109,43 +119,53 @@
     width: 60px;
     cursor: pointer;
     border-radius: 5px;
-    padding: 5px;
-    transition: background 0.2s ease;
+    padding: 6px;
+    transition: all 0.2s ease;
     text-align: center;
+    border: 1px solid transparent;
 }
 
 .teatro-actor-item:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    border-color: #555555;
 }
 
 .teatro-actor-item.active {
-    background: rgba(0, 255, 0, 0.2);
+    background: rgba(0, 255, 0, 0.1);
     border: 1px solid #00ff00;
+    box-shadow: 0 0 5px rgba(0, 255, 0, 0.3) inset;
 }
 
 .teatro-actor-img {
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     object-fit: cover;
     object-position: top;
-    border: 2px solid var(--color-border-dark-1);
+    border: 2px solid #555555;
     pointer-events: none;
+    transition: border-color 0.2s;
+}
+
+.teatro-actor-item.active .teatro-actor-img {
+    border-color: #00ff00;
 }
 
 .teatro-actor-name {
-    font-size: 10px;
-    margin-top: 3px;
+    font-size: 11px;
+    margin-top: 4px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     width: 100%;
     pointer-events: none;
+    color: #eeeeee;
+    text-shadow: 1px 1px 2px black;
 }
 
 .teatro-no-actors {
     text-align: center;
-    color: var(--color-text-light-highlight);
+    color: #888888;
     font-style: italic;
     padding: 20px;
 }
