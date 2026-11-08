@@ -1,46 +1,75 @@
 <div class="teatro-control-panel">
-    {{#if isGM}}
-    <div class="teatro-settings-header" style="padding: 10px; border-bottom: 1px solid #333; margin-bottom: 10px; display: flex; flex-direction: column; gap: 8px; background: #1a1a1a;">
-        <label for="teatro-scale-slider" style="font-size: 13px; font-weight: bold; color: #d8c381;">
-            <i class="fas fa-search-plus"></i> Altura do Personagem: <span id="teatro-scale-val">{{currentScale}}%</span> da tela
-        </label>
-        <input type="range" id="teatro-scale-slider" min="20" max="100" value="{{currentScale}}" style="width: 100%;">
-        
-        <div style="display: flex; gap: 5px; margin-top: 5px;">
-            <button type="button" id="teatro-remove-all-btn" style="flex: 1; font-size: 12px; background: rgba(255, 0, 0, 0.15); border: 1px solid #ff4444; color: #ff4444; border-radius: 4px; cursor: pointer; padding: 5px;">
-                <i class="fas fa-trash"></i> Limpar Cena
-            </button>
-            <button type="button" id="teatro-force-sync-btn" style="flex: 1; font-size: 12px; background: rgba(0, 150, 255, 0.15); border: 1px solid #44aaff; color: #44aaff; border-radius: 4px; cursor: pointer; padding: 5px;">
-                <i class="fas fa-sync-alt"></i> Forçar Sinc.
-            </button>
-        </div>
-    </div>
-    {{/if}}
-    <div class="teatro-panel-content">
-        <div class="teatro-search-bar" style="padding: 0 10px 10px 10px; margin-top: 10px;">
-            <input type="text" id="teatro-search-input" placeholder="Pesquisar ator ou pasta..." style="width: 100%; box-sizing: border-box; background: rgba(0, 0, 0, 0.5); color: white; border: 1px solid var(--color-border-dark-2); border-radius: 3px; padding: 5px;">
-        </div>
-        {{{folderHTML}}}
+    <div class="teatro-header-sticky">
+        {{#if isGM}}
+        <div class="teatro-settings-header">
+            <div class="teatro-scale-row">
+                <label for="teatro-scale-slider" title="Duplo clique aqui para restaurar 48%">
+                    <i class="fas fa-arrows-alt-v"></i> Escala: <strong id="teatro-scale-val">{{currentScale}}%</strong>
+                </label>
+                <input type="range" id="teatro-scale-slider" min="20" max="100" value="{{currentScale}}">
+            </div>
 
-        {{#if unassigned.length}}
-        <div class="teatro-folder" data-folder-id="root">
-            <h3 class="teatro-folder-header">
-                <i class="fas fa-folder-open"></i> Sem Pasta
-                <span class="teatro-folder-count">({{unassigned.length}})</span>
-            </h3>
-            <div class="teatro-folder-content">
-                {{#each unassigned as |actor|}}
-                <div class="teatro-actor-item {{#if actor.active}}active{{/if}}" data-actor-id="{{actor.id}}">
-                    <img class="teatro-actor-img" src="{{actor.img}}" alt="{{actor.name}}" title="{{actor.name}}" />
-                    <span class="teatro-actor-name">{{actor.name}}</span>
+            <div class="teatro-gm-toggles">
+                <button type="button" id="teatro-blur-btn" class="teatro-btn teatro-btn-blur {{#if blurEnabled}}active{{/if}}" title="Ativar/Desativar desfoque (~{{blurIntensity}}%) no fundo da cena para todos">
+                    <i class="fas fa-eye"></i> <span class="teatro-blur-label">{{#if blurEnabled}}Blur: ON{{else}}Blur: OFF{{/if}}</span>
+                </button>
+                <button type="button" id="teatro-player-spotlight-btn" class="teatro-btn teatro-btn-perm {{#if allowPlayerSpotlight}}unlocked{{else}}locked{{/if}}" title="{{#if allowPlayerSpotlight}}Jogadores podem destacar o próprio personagem ao falar (clique para restringir só ao Mestre){{else}}Apenas o Mestre pode ativar o destaque de fala (clique para liberar aos jogadores){{/if}}">
+                    <i class="fas {{#if allowPlayerSpotlight}}fa-unlock{{else}}fa-lock{{/if}}"></i>
+                    <span class="teatro-perm-label">{{#if allowPlayerSpotlight}}Destaque: Livre{{else}}Destaque: Só GM{{/if}}</span>
+                </button>
+            </div>
+
+            <div class="teatro-gm-actions">
+                <button type="button" id="teatro-center-all-btn" class="teatro-btn teatro-btn-center" title="Reorganizar e centralizar todos os personagens ativos na tela">
+                    <i class="fas fa-compress-arrows-alt"></i> Centralizar
+                </button>
+                <button type="button" id="teatro-force-sync-btn" class="teatro-btn teatro-btn-sync" title="Atualizar mídias e forçar sincronização para todos os jogadores">
+                    <i class="fas fa-sync-alt"></i> Sinc.
+                </button>
+                <button type="button" id="teatro-remove-all-btn" class="teatro-btn teatro-btn-danger" title="Remover todos os personagens da cena">
+                    <i class="fas fa-trash-alt"></i> Limpar
+                </button>
+            </div>
+
+            <div class="teatro-stage-bar">
+                <div class="teatro-stage-bar-header">
+                    <span><i class="fas fa-star"></i> Em Cena: <strong id="teatro-active-count">{{activeCount}}</strong>/{{maxActors}}</span>
+                    <button type="button" id="teatro-clear-spotlight-btn" class="teatro-mini-link" style="display: none;" title="Desativar destaque de fala de todos">
+                        <i class="fas fa-lightbulb"></i> Resetar Foco
+                    </button>
                 </div>
-                {{/each}}
+                <div id="teatro-active-strip" class="teatro-active-strip"></div>
             </div>
         </div>
         {{/if}}
-        
+
+        <div class="teatro-toolbar">
+            <div class="teatro-search-wrapper">
+                <i class="fas fa-search teatro-search-icon"></i>
+                <input type="text" id="teatro-search-input" value="{{searchQuery}}" placeholder="Pesquisar ator ou pasta...">
+                <button type="button" id="teatro-search-clear" class="teatro-search-clear" title="Limpar pesquisa" style="{{#unless searchQuery}}display: none;{{/unless}}">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <button type="button" id="teatro-expand-all-btn" class="teatro-icon-btn" title="Expandir todas as pastas">
+                <i class="fas fa-angle-double-down"></i>
+            </button>
+            <button type="button" id="teatro-collapse-all-btn" class="teatro-icon-btn" title="Recolher todas as pastas">
+                <i class="fas fa-angle-double-up"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="teatro-panel-content">
+        {{{folderHTML}}}
+        {{{unassignedHTML}}}
+
         {{#if hasNoActors}}
-        <p class="teatro-no-actors">Nenhum ator encontrado.</p>
+        <p class="teatro-no-actors">Nenhum ator compatível encontrado.</p>
         {{/if}}
+    </div>
+
+    <div class="teatro-panel-footer" title="Arrastar: Mover | Dir: Espelhar | 2x Clique: Destacar | Shift+Clique: Pular | Alt+Clique: Impacto | Ctrl+Clique: Tremilique">
+        <i class="fas fa-hand-pointer"></i> 2x Clique: Foco · Shift: Pular · Alt: Impacto · Ctrl: Tremilique
     </div>
 </div>
